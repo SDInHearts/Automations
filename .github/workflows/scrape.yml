@@ -1,0 +1,36 @@
+name: Scrape and Commit JSON
+
+on:
+  schedule:
+    - cron: '0 2 * * *' # Every day at 8:00 AM GMT+6 (2:00 AM UTC)
+  workflow_dispatch:
+
+jobs:
+  scrape:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v3
+
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.x'
+
+      - name: Install dependencies
+        run: |
+          pip install beautifulsoup4 requests
+
+      - name: Run scraper
+        run: python scrape.py
+
+      - name: Create new branch and commit data
+        run: |
+          branch_name="scrape-data-$(date +%Y%m%d)"
+          git config --global user.name "github-actions"
+          git config --global user.email "github-actions@github.com"
+          git checkout -b $branch_name
+          git add *.json
+          git commit -m "Scraped data on $(date)"
+          git push origin $branch_name
